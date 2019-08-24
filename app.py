@@ -74,7 +74,6 @@ def make_relatives_correct(import_id, citizen_id, new_relatives):
     cursor.execute(sql, [import_id, citizen_id])
     current_relatives = cursor.fetchall()
     current_relatives = [i[0] for i in current_relatives]
-    print('!!!!!!', new_relatives, current_relatives)
     for relative in current_relatives:
         if relative not in new_relatives:
             delete_relatives(import_id, citizen_id, relative)
@@ -89,13 +88,11 @@ def make_relatives_correct(import_id, citizen_id, new_relatives):
 def imports_data():
     try:
         citizens = json.loads(request.get_data().decode('utf-8'))['citizens']
-        print(f"citizens: {citizens}")
         sql = "select max(import_id) from citizens"
         conn = sqlite3.connect("mydatabase.db")
         cursor = conn.cursor()
         cursor.execute(sql)
         max_import_id = cursor.fetchall()
-        print(max_import_id)
         cur_import_id = max_import_id[0][0] + 1 if max_import_id[0][0] else 1
         for citizen in citizens:
             sql = "insert into citizens values (?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -107,7 +104,6 @@ def imports_data():
                 cursor.execute(sql, [cur_import_id, citizen["citizen_id"], relative])
         conn.commit()
     except:
-        print(traceback.print_exc(file=sys.stdout))
         return Response(status=400)
 
     return Response(json.dumps({"data": {"import_id": cur_import_id}}), status=201)
@@ -151,16 +147,9 @@ def update_data(import_id, citizen_id):
 
         if "relatives" in data:
             make_relatives_correct(import_id, citizen_id, data['relatives'])
-            '''sql = "delete from relatives where import_id = ? and citizen_id = ?"
-            cursor.execute(sql, [import_id, citizen_id])
-
-            for relative in data["relatives"]:
-                sql = "insert into relatives values (?, ?, ?)"
-                cursor.execute(sql, [import_id, citizen_id, relative])'''
         conn.commit()
         data = get_citizen_info(import_id, citizen_id)
     except:
-        print(traceback.print_exc(file=sys.stdout))
         return Response(400)
     return Response(json.dumps({"data": data}), status=200)
 
@@ -202,7 +191,6 @@ def birthday_stats(import_id):
                         "presents": cnt_presents
                     })
     except:
-        print(traceback.print_exc(file=sys.stdout))
         return Response(status=400)
 
     return Response(json.dumps({"data": result}).encode('utf-8'), status=200)
@@ -237,11 +225,10 @@ def town_age_stat(import_id):
             }
             percentiles.append(percentile)
     except:
-        print(traceback.print_exc(file=sys.stdout))
         return Response(400)
 
     return Response(json.dumps({"data": percentiles}), status=200)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080)
