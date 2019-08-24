@@ -1,4 +1,3 @@
 flask
-sqlite3
 dateutil
 numpy
